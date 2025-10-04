@@ -1,0 +1,61 @@
+`timescale 1ns / 1ps
+module newspaper_vending_machine (
+    input  logic clk,
+    input  logic reset,
+    input  logic nickel,    // Active-high pulse, one clock cycle
+    input  logic dime,      // Active-high pulse, one clock cycle
+    output logic vend       // High when newspaper dispensed
+);
+
+    typedef enum logic [2:0] {
+        S0,    // 0 cents
+        S5,    // 5 cents
+        S10,   // 10 cents
+        S15,   // 15 cents (vend)
+        S20    // 20 cents (vend, no change returned)
+    } state_t;
+
+    state_t current, next;
+
+    // State register
+    always_ff @(posedge clk or posedge reset) begin
+        if (reset)
+            current <= S0;
+        else
+            current <= next;
+    end
+
+    // Next state logic
+    always_comb begin
+        next = current;
+        vend = 1'b0;
+
+        unique case (current)
+            S0: begin
+                if (nickel)      next = S5;
+                else if (dime)   next = S10;
+                // else remain at S0
+            end
+            S5: begin
+                if (nickel)      next = S10;
+                else if (dime)   next = S15;
+                // else remain at S5
+            end
+            S10: begin
+                if (nickel)      next = S15;
+                else if (dime)   next = S20;
+                // else remain at S10
+            end
+            S15: begin
+                vend = 1'b1;
+                next = S0;
+            end
+            S20: begin
+                vend = 1'b1;
+                next = S0;
+            end
+            default: next = S0;
+        endcase
+    end
+
+endmodule
