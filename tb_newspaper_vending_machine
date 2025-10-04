@@ -1,0 +1,57 @@
+`timescale 1ns / 1ps
+module tb_newspaper_vending_machine();
+
+    logic clk;
+    logic reset;
+    logic nickel;
+    logic dime;
+    logic vend;
+
+    // DUT instantiation
+    newspaper_vending_machine uut (
+        .clk     (clk),
+        .reset   (reset),
+        .nickel  (nickel),
+        .dime    (dime),
+        .vend    (vend)
+    );
+
+    // Clock generation
+    initial clk = 0;
+    always #5 clk = ~clk;   // 10ns clock period
+
+    // Stimulus
+    initial begin
+        reset = 1;
+        nickel = 0;
+        dime = 0;
+        #12;
+        reset = 0;
+
+        // Test: Nickel, Nickel, Nickel (5+5+5)
+        #10; nickel = 1; #10; nickel = 0;
+        #10; nickel = 1; #10; nickel = 0;
+        #10; nickel = 1; #10; nickel = 0;
+        #10;
+
+        // Test: Nickel, Dime (5+10)
+        #10; nickel = 1; #10; nickel = 0;
+        #10; dime = 1; #10; dime = 0;
+        #10;
+
+        // Test: Dime, Nickel (10+5)
+        #10; dime = 1; #10; dime = 0;
+        #10; nickel = 1; #10; nickel = 0;
+        #10;
+
+        // Test: Two Dimes (10+10, should vend, no change)
+        #10; dime = 1; #10; dime = 0;
+        #10; dime = 1; #10; dime = 0;
+        #10;
+
+        // End simulation
+        #50; $finish;
+    end
+
+endmodule
+
